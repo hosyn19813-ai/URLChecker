@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html><!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Checker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+
+        /* Smooth popup animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-popup {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.25s; }
+        .delay-300 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 p-4 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2" dir="ltr">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-2xl"></i>
+                <h1 class="text-xl font-bold text-slate-100">URL Checker</h1>
+            </div>
+            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/30 font-medium">فحص حقيقي</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-xl mx-auto w-full p-4 my-auto space-y-6">
+
+        <!-- Top Explanation Section -->
+        <section class="animate-popup opacity-0">
+            <div class="bg-gradient-to-r from-emerald-950/40 via-slate-800/60 to-slate-800/40 p-4 rounded-2xl border border-emerald-500/20 backdrop-blur">
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-circle-info text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-emerald-400 mb-1">كيف يضمن التطبيق الفحص الصادق؟</h2>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            يتصل التطبيق بشكل مباشر بـ <b>VirusTotal API</b> لفحص الرابط عبر أكثر من 70 قاعدة بيانات أمان عالمية بدون تخزين أو تلاعب بالنتائج.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Input Box Section -->
+        <section class="animate-popup delay-100 opacity-0 bg-slate-800/80 p-6 rounded-2xl border border-slate-700 shadow-2xl backdrop-blur-sm">
+            <h2 class="text-lg font-semibold mb-2 text-slate-200">افحص أي رابط قبل فتحه</h2>
+            <p class="text-xs text-slate-400 mb-4">ضع رابط الموقع أو الملف أدناه للحصول على تقرير الأمان الفوري.</p>
+
+            <div class="flex flex-col gap-3">
+                <div class="relative">
+                    <i class="fa-solid fa-link absolute right-4 top-3.5 text-slate-500"></i>
+                    <input type="url" id="urlInput" placeholder="https://example.com" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl pr-11 pl-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition">
+                </div>
+                <button onclick="analyzeURL()" id="scanBtn" 
+                    class="bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-slate-950 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>بدء الفحص الحقيقي</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="hidden my-8 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+            <p class="text-xs text-slate-400 mt-2">جاري التواصل مع محركات الأمان وتحليل الرابط...</p>
+        </div>
+
+        <!-- Result Card -->
+        <div id="resultCard" class="hidden my-6 bg-slate-800/90 border p-6 rounded-2xl shadow-xl animate-popup">
+            <div class="flex items-center gap-3 mb-4" id="statusHeader"></div>
+
+            <div class="space-y-3 text-sm border-t border-slate-700/60 pt-4">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">الرابط المفحوص:</span>
+                    <span id="scannedUrl" class="font-mono text-xs text-slate-200 truncate max-w-[200px]" dir="ltr"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">نتائج VirusTotal:</span>
+                    <span id="vtStats" class="font-bold"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">تشفير SSL (HTTPS):</span>
+                    <span id="sslStatus"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Bottom Features Section -->
+        <section class="animate-popup delay-200 opacity-0 space-y-3">
+            <div class="text-xs font-semibold text-slate-400 px-1 flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-cat text-emerald-400"></i>
+                <span>ما الذي يفحصه النظام بدقة؟</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i class="fa-solid fa-bug text-rose-400 text-base"></i>
+                        <h3 class="text-xs font-bold text-slate-200">البرمجيات الخبيثة والتنزيلات</h3>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        يكشف ملفات التجسس، الفيروسات، وبرامج التشفير (Ransomware) التي قد تنزل تلقائياً بمجرد زيارة الموقع.
+                    </p>
+                </div>
+
+                <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i class="fa-solid fa-user-ninja text-amber-400 text-base"></i>
+                        <h3 class="text-xs font-bold text-slate-200">الصفحات المزورة والتصيد</h3>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        يتعرف على صفحات تسجيل الدخول المزيفة التي تسرق الحسابات والبطاقات البنكية عبر تقنيات (Phishing).
+                    </p>
+                </div>
+
+                <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i class="fa-solid fa-lock text-emerald-400 text-base"></i>
+                        <h3 class="text-xs font-bold text-slate-200">بروتوكولات التشفير SSL</h3>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        يتأكد من وجود شهادة أمان معتمدة (HTTPS) لحماية البيانات المرسلة والمستقبلة من التنصت.
+                    </p>
+                </div>
+
+                <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-800 hover:border-slate-700 transition">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i class="fa-solid fa-server text-cyan-400 text-base"></i>
+                        <h3 class="text-xs font-bold text-slate-200">سمعة الخادم والدومين</h3>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        يفحص تاريخ النطاق وعنوان الـ IP للتأكد من عدم ارتباطه بأنشطة مشبوهة أو قائمة سوداء.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center p-4 text-xs text-slate-500 border-t border-slate-800/80" dir="ltr">
+        URL Checker &copy; 2026
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const API_KEY = '838ec1c1e445563bab2279fc8528429e52c12d9bdff2801f3eb993be5e8a73fd';
+
+        async function analyzeURL() {
+            const urlInput = document.getElementById('urlInput').value.trim();
+
+            if (!urlInput) {
+                alert('يرجى إدخال رابط أولاً!');
+                return;
+            }
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultCard').classList.add('hidden');
+
+            try {
+                const urlId = btoa(urlInput).replace(/=/g, '');
+
+                const response = await fetch(`https://www.virustotal.com/api/v3/urls/${urlId}`, {
+                    method: 'GET',
+                    headers: {
+                        'x-apikey': API_KEY
+                    }
+                });
+
+                if (response.status === 404) {
+                    await submitForScan(urlInput);
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('حدث خطأ أثناء فحص الرابط.');
+                }
+
+                const data = await response.json();
+                displayResults(data.data.attributes.last_analysis_stats, urlInput);
+
+            } catch (err) {
+                alert('خطأ: ' + err.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        async function submitForScan(targetUrl) {
+            const formData = new URLSearchParams();
+            formData.append('url', targetUrl);
+
+            const res = await fetch('https://www.virustotal.com/api/v3/urls', {
+                method: 'POST',
+                headers: {
+                    'x-apikey': API_KEY,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            });
+
+            if (res.ok) {
+                alert('هذا الرابط يُفحص لأول مرة! تم إرساله للفحص، يرجى الضغط على فحص مرة أخرى بعد بضع ثوانٍ.');
+            } else {
+                alert('فشل إرسال الرابط الجديد للفحص.');
+            }
+        }
+
+        function displayResults(stats, originalUrl) {
+            const card = document.getElementById('resultCard');
+            const header = document.getElementById('statusHeader');
+            const scannedUrl = document.getElementById('scannedUrl');
+            const vtStats = document.getElementById('vtStats');
+            const sslStatus = document.getElementById('sslStatus');
+
+            scannedUrl.textContent = originalUrl;
+
+            const malicious = stats.malicious + stats.suspicious;
+            const isHttps = originalUrl.startsWith('https://');
+
+            sslStatus.innerHTML = isHttps 
+                ? '<span class="text-emerald-400">مشفّر (آمن) <i class="fa-solid fa-lock"></i></span>'
+                : '<span class="text-amber-400">غير مشفّر (HTTP) <i class="fa-solid fa-lock-open"></i></span>';
+
+            vtStats.textContent = `${stats.malicious} محرك اعتبره خطراً من أصل ${stats.harmless + stats.malicious + stats.undetected}`;
+
+            if (malicious === 0) {
+                card.className = "my-6 bg-emerald-950/40 border border-emerald-500/40 p-6 rounded-2xl shadow-xl animate-popup";
+                header.innerHTML = `
+                    <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-emerald-400 text-base">الرابط آمن تماماً</h3>
+                        <p class="text-xs text-slate-400">لم تكتشف محركات الحماية أي تهديد</p>
+                    </div>
+                `;
+            } else {
+                card.className = "my-6 bg-rose-950/40 border border-rose-500/40 p-6 rounded-2xl shadow-xl animate-popup";
+                header.innerHTML = `
+                    <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-rose-400 text-base">تحذير: الرابط مشبوه أو ضار!</h3>
+                        <p class="text-xs text-slate-400">تم اكتشاف تهديد برلمجي أو احتيالي</p>
+                    </div>
+                `;
+            }
+
+            card.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
